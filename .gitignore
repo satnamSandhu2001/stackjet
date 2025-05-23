@@ -1,0 +1,31 @@
+# Binaries
+/go-stack-cli
+/bin/
+/*.exe
+/*.exe~
+/*.dll
+/*.so
+/*.dylib
+
+# Output of `go build`
+*.out
+
+# Test binary
+*.test
+
+# Logs
+*.log
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Go module cache
+/vendor/
+
+# Environment files (if
