@@ -18,7 +18,7 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 	help := flag.Bool("h", false, "Shows commands usage")
 	verbose = flag.Bool("verbose", false, "Show Verbose Output")
-	workingDir := flag.String("dir", "/var/www/html", "Root Directory of Project")
+	workingDir := flag.String("dir", "./", "Root Directory of Project")
 	gitBranch := flag.String("branch", "master", "Git branch name")
 	gitRemote := flag.String("git-remote", "origin", "Git remote name")
 	gitReset := flag.Bool("git-reset", false, "Force Reset Git state")
