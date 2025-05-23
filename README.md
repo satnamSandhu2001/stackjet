@@ -24,7 +24,7 @@ A powerful, lightweight deployment automation tool written in Go for streamlined
 ### Quick Install Script
 
 ```bash
-curl -sSL https://github.com/satnamSandhu2001/go-stack-cli/blob/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/go-stack-cli/master/install.sh | bash
 ```
 
 ### From Source
