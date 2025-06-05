@@ -28,7 +28,7 @@ esac
 BINARY="stackjet-linux-${ARCH}"
 
 echo "Downloading stackjet for $OS..."
-curl -L -o stackjet "https://github.com/satnamSandhu2001/stackjet/releases/latest/download/$BINARY"
+curl -L -o stackjet "https://github.com/satnamSandhu2001/StackJet/releases/latest/download/$BINARY"
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to download stackjet. Please check your internet connection or the GitHub repository."

@@ -1,4 +1,4 @@
-# Stackjet 🚀
+# StackJet 🚀
 
 A powerful and easy-to-use CLI + UI tool for multistack automated deployment and management of your web projects.
 
@@ -19,19 +19,19 @@ A powerful, lightweight deployment automation tool written in Go for streamlined
 
 ## 🛠 Installation
 
-> **Note:** You do **NOT** need to have Go installed to use this tool. Precompiled binaries are available in the [releases](https://github.com/satnamSandhu2001/stackjet/releases) section for easy download and setup.
+> **Note:** You do **NOT** need to have Go installed to use this tool. Precompiled binaries are available in the [releases](https://github.com/satnamSandhu2001/StackJet/releases) section for easy download and setup.
 
 ### Quick Install Script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/stackjet/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/StackJet/master/install.sh | bash
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/satnamSandhu2001/stackjet.git
-cd stackjet
+git clone https://github.com/satnamSandhu2001/StackJet.git
+cd StackJet
 go build -o stackjet main.go
 sudo mv stackjet /usr/local/bin/
 ```
@@ -41,47 +41,49 @@ sudo mv stackjet /usr/local/bin/
 ### Basic Usage
 
 ```bash
-stackjet
+stackjet -h
 ```
 
-### Advanced Options
+#### deploy
 
 ```bash
-stackjet [OPTIONS]
+stackjet deploy [OPTIONS]
 
 Options:
-  -h                    Show help message
-  --verbose             Show detailed output during execution
-  --dir string          Root directory of project (default "./")
-  --branch string       Git branch name to deploy (default "master")
-  --git-remote string   Git remote name (default "origin")
-  --git-reset           Force reset Git state before deployment
+  --dir string             Root directory of project (default "./")
+  --branch string          Git branch name to deploy (default "master")
+  --git-remote string      Git remote name (default "origin")
+  --git-hash string        Rollback to specific commit hash
+  --git-skip               Skips git repo update
+  --git-reset              Force reset Git state before deployment
+  -h                       Show help message
+  -v                       Show detailed output during execution
 ```
 
-### Examples
+#### Examples
 
 **Deploy from a specific directory:**
 
 ```bash
-stackjet --dir /home/user/myproject
+stackjet deploy --dir "/home/path-to-project"
 ```
 
 **Deploy specific branch with verbose output:**
 
 ```bash
-stackjet --branch production --verbose
+stackjet deploy --branch "production"
 ```
 
 **Force clean deployment:**
 
 ```bash
-stackjet --git-reset --verbose
+stackjet deploy --git-hash "your-commit-hash"
 ```
 
 **Deploy from custom remote:**
 
 ```bash
-stackjet --git-remote upstream --branch develop
+stackjet deploy --git-remote "upstream" --branch "development"
 ```
 
 ## 📋 Prerequisites
@@ -161,7 +163,7 @@ I welcome contributions! Here's how you can help:
 ### Development Setup
 
 ```bash
-git clone https://github.com/satnamSandhu2001/stackjet.git
+git clone https://github.com/satnamSandhu2001/StackJet.git
 cd stackjet
 go mod tidy
 go run main.go -h
@@ -169,8 +171,8 @@ go run main.go -h
 
 ## 🐛 Issues & Support
 
-- **Bug Reports**: [GitHub Issues](https://github.com/satnamSandhu2001/stackjet/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/satnamSandhu2001/stackjet/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/satnamSandhu2001/StackJet/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/satnamSandhu2001/StackJet/discussions)
 
 ## 📄 License
 
