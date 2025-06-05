@@ -1,12 +1,12 @@
-# Go Stack CLI 🚀
+# Stackjet 🚀
 
-A powerful and easy-to-use CLI tool for automated deployment and management of your web projects.
+A powerful and easy-to-use CLI + UI tool for multistack automated deployment and management of your web projects.
 
 ---
 
 ## Overview
 
-A powerful, lightweight deployment automation tool written in Go for streamlined Git-based deployments. `go-stack-cli` is perfect for automating server deployments with minimal configuration.
+A powerful, lightweight deployment automation tool written in Go for streamlined Git-based deployments. `stackjet` is perfect for automating server deployments with minimal configuration.
 
 ## ✨ Features
 
@@ -19,21 +19,21 @@ A powerful, lightweight deployment automation tool written in Go for streamlined
 
 ## 🛠 Installation
 
-> **Note:** You do **NOT** need to have Go installed to use this tool. Precompiled binaries are available in the [releases](https://github.com/satnamSandhu2001/go-stack-cli/releases) section for easy download and setup.
+> **Note:** You do **NOT** need to have Go installed to use this tool. Precompiled binaries are available in the [releases](https://github.com/satnamSandhu2001/stackjet/releases) section for easy download and setup.
 
 ### Quick Install Script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/go-stack-cli/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/stackjet/master/install.sh | bash
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/satnamSandhu2001/go-stack-cli.git
-cd go-stack-cli
-go build -o go-stack-cli main.go
-sudo mv go-stack-cli /usr/local/bin/
+git clone https://github.com/satnamSandhu2001/stackjet.git
+cd stackjet
+go build -o stackjet main.go
+sudo mv stackjet /usr/local/bin/
 ```
 
 ## 🚦 Usage
@@ -41,13 +41,13 @@ sudo mv go-stack-cli /usr/local/bin/
 ### Basic Usage
 
 ```bash
-go-stack-cli
+stackjet
 ```
 
 ### Advanced Options
 
 ```bash
-go-stack-cli [OPTIONS]
+stackjet [OPTIONS]
 
 Options:
   -h                    Show help message
@@ -63,25 +63,25 @@ Options:
 **Deploy from a specific directory:**
 
 ```bash
-go-stack-cli --dir /home/user/myproject
+stackjet --dir /home/user/myproject
 ```
 
 **Deploy specific branch with verbose output:**
 
 ```bash
-go-stack-cli --branch production --verbose
+stackjet --branch production --verbose
 ```
 
 **Force clean deployment:**
 
 ```bash
-go-stack-cli --git-reset --verbose
+stackjet --git-reset --verbose
 ```
 
 **Deploy from custom remote:**
 
 ```bash
-go-stack-cli --git-remote upstream --branch develop
+stackjet --git-remote upstream --branch develop
 ```
 
 ## 📋 Prerequisites
@@ -161,18 +161,16 @@ I welcome contributions! Here's how you can help:
 ### Development Setup
 
 ```bash
-git clone https://github.com/satnamSandhu2001/go-stack-cli.git
-cd go-stack-cli
+git clone https://github.com/satnamSandhu2001/stackjet.git
+cd stackjet
 go mod tidy
 go run main.go -h
 ```
 
-## 📝 Configuration Examples
-
 ## 🐛 Issues & Support
 
-- **Bug Reports**: [GitHub Issues](https://github.com/satnamSandhu2001/go-stack-cli/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/satnamSandhu2001/go-stack-cli/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/satnamSandhu2001/stackjet/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/satnamSandhu2001/stackjet/discussions)
 
 ## 📄 License
 
@@ -188,4 +186,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⭐ Star this repository if you find it useful!**
 
-_Go Stack CLI - Making deployments simple, one commit at a time._
+_Stackjet - Deploy smarter - Fly faster._
