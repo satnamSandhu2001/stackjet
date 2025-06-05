@@ -1,5 +1,5 @@
 # Binaries
-/go-stack-cli
+/stackjet
 /dist
 /bin/
 /*.exe
@@ -29,4 +29,6 @@ Thumbs.db
 # Go module cache
 /vendor/
 
-# Environment files (if
+*.env
+*.db
+/tmp

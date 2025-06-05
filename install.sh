@@ -2,33 +2,49 @@
 
 OS=$(uname -s)
 
-if [ "$OS" = "Linux" ]; then
-  BINARY="go-stack-cli-linux"
-elif [ "$OS" = "Darwin" ]; then # macOS
-  BINARY="go-stack-cli-mac"
-else
-  echo "Error: Unsupported operating system ($OS). This script supports Linux and macOS."
+# Detect OS
+if [ "$OS" != "Linux" ]; then
+  echo "Unsupported OS: $OS. Only Linux is supported."
   exit 1
 fi
 
-echo "Downloading go-stack-cli for $OS..."
-curl -L -o go-stack-cli "https://github.com/satnamSandhu2001/go-stack-cli/releases/latest/download/$BINARY"
+# Detect architecture
+ARCH=$(uname -m)
+
+case "$ARCH" in
+  x86_64)
+    ARCH="amd64"
+    ;;
+  aarch64 | arm64)
+    ARCH="arm64"
+    ;;
+  *)
+    echo "❌ Unsupported architecture: $ARCH"
+    exit 1
+    ;;
+esac
+
+# Construct binary name
+BINARY="stackjet-linux-${ARCH}"
+
+echo "Downloading stackjet for $OS..."
+curl -L -o stackjet "https://github.com/satnamSandhu2001/stackjet/releases/latest/download/$BINARY"
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to download go-stack-cli. Please check your internet connection or the GitHub repository."
+    echo "Error: Failed to download stackjet. Please check your internet connection or the GitHub repository."
     exit 1
 fi
 
-echo "Making go-stack-cli executable..."
-chmod +x go-stack-cli
+echo "Making stackjet executable..."
+chmod +x stackjet
 
-echo "Moving go-stack-cli to /usr/local/bin/ (requires sudo)..."
-sudo mv go-stack-cli /usr/local/bin/
+echo "Moving stackjet to /usr/local/bin/ (requires sudo)..."
+sudo mv stackjet /usr/local/bin/
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to move go-stack-cli. Do you have sudo permissions?"
+    echo "Error: Failed to move stackjet. Do you have sudo permissions?"
     exit 1
 fi
 
-echo "go-stack-cli installed successfully!"
-echo "You can now run 'go-stack-cli --help' to see available options."
+echo "stackjet installed successfully!"
+echo "You can now run 'stackjet help' to see available options."
