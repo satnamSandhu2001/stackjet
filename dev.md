@@ -1,4 +1,4 @@
 ```bash
 # Create a new migration
-migrate create -ext sql -dir migrations -seq add_users_table
+migrate create -ext sql -dir database/migrations -seq add_t...
 ```

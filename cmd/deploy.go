@@ -18,8 +18,10 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/satnamSandhu2001/stackjet/internal/cli/git"
+	"github.com/satnamSandhu2001/stackjet/internal/cli/stack"
 	"github.com/satnamSandhu2001/stackjet/internal/cli/workspace"
 	"github.com/satnamSandhu2001/stackjet/pkg"
 	"github.com/spf13/cobra"
@@ -27,12 +29,15 @@ import (
 
 // flags
 var (
-	dir       string
+	dir string
+
 	gitBranch string
 	gitRemote string
 	gitReset  bool
 	gitSkip   bool
 	gitHash   string
+
+	stackName string
 )
 
 // deployCmd represents the deploy command
@@ -51,6 +56,15 @@ This includes:
 
 Stackjet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
 
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// validate stack flag
+		if ok := stack.IsValidStack(strings.TrimSpace(stackName)); !ok {
+			return fmt.Errorf(`⭕ Invalid stack: "%s".
+   Valid options are: "%s"`, stackName, strings.Join(pkg.Config().VALID_STACKS, `", "`))
+		}
+		return nil
+	},
+
 	Run: func(cmd *cobra.Command, args []string) {
 		// workspace logic
 		if err := workspace.EnterWorkspace(dir); err != nil {
@@ -59,6 +73,10 @@ Stackjet works via CLI, webhook triggers, or a web panel — making deployments 
 
 		// git logic
 		if err := git.UpdateRepo(gitBranch, gitRemote, gitReset, gitSkip, gitHash); err != nil {
+			return
+		}
+		// deploy stack logic
+		if err := stack.DeployStack(stackName); err != nil {
 			return
 		}
 
@@ -74,4 +92,14 @@ func init() {
 	deployCmd.Flags().StringVar(&gitHash, "git-hash", "", "Rollback to specific commit hash")
 	deployCmd.Flags().BoolVar(&gitReset, "git-reset", pkg.Config().GIT_RESET, "Force reset git state")
 	deployCmd.Flags().BoolVar(&gitSkip, "git-skip", false, "Skip git repo update")
+
+	deployCmd.Flags().StringVarP(&stackName, "stack", "s", "",
+		fmt.Sprintf("Tech stack to deploy ('%s')", strings.Join(pkg.Config().VALID_STACKS, "', '")),
+	)
+
+	// register auto completion for stack flag
+	deployCmd.RegisterFlagCompletionFunc("stack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return pkg.Config().VALID_STACKS, cobra.ShellCompDirectiveNoFileComp
+	})
+
 }

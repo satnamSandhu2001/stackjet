@@ -10,11 +10,8 @@ import (
 )
 
 // Returns base folder's (originalName, formattedName, error)
-func BaseFolderName() (string, string, error) {
-	path, err := commands.RunCommand("pwd")
-	if err != nil {
-		return "", "", err
-	}
+func BaseFolderName(path string) (string, string, error) {
+
 	trimmed := strings.TrimRight(path, "/")
 	originalName := strings.TrimSpace(trimmed[strings.LastIndex(trimmed, "/")+1:])
 	formattedName := strings.ToUpper(regexp.MustCompile(`[-_]`).ReplaceAllString(originalName, " "))
@@ -23,12 +20,12 @@ func BaseFolderName() (string, string, error) {
 
 // Enter workspace of the project
 func EnterWorkspace(path string) error {
-	_, folderNameFormatted, err := BaseFolderName()
+	_, folderNameFormatted, err := BaseFolderName(path)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("\n~~~~~~ REDEPLOYING (%s) ~~~~~~\n", folderNameFormatted)
+	fmt.Printf("\n------ Deploying: %s ------\n", folderNameFormatted)
 
 	checkDir, _ := commands.RunCommand("pwd")
 	if err := os.Chdir(path); err != nil {

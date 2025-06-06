@@ -9,16 +9,16 @@ import (
 
 // Updates the local git-repo to specific version from remote-repo and returns error if failed
 func UpdateRepo(gitBranch string, gitRemote string, gitReset bool, gitSkip bool, gitHash string) error {
-	// trim whitespace from input strings
-	gitBranch = strings.TrimSpace(gitBranch)
-	gitRemote = strings.TrimSpace(gitRemote)
-	gitHash = strings.TrimSpace(gitHash)
-
 	// skip git repo update if gitSkip is true
 	if gitSkip {
 		fmt.Println("Skipping git repo update...")
 		return nil
 	}
+
+	// trim whitespace from input strings
+	gitBranch = strings.TrimSpace(gitBranch)
+	gitRemote = strings.TrimSpace(gitRemote)
+	gitHash = strings.TrimSpace(gitHash)
 
 	// get current active branch
 	activeBranch, err := commands.RunCommand("git", "branch", "--show-current")
