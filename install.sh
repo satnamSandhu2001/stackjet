@@ -47,4 +47,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "stackjet installed successfully!"
-echo "You can now run 'stackjet help' to see available options."
+
+echo "Initializing stackjet..."
+stackjet init
+exit 0

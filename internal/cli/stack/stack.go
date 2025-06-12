@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"slices"
 	"strings"
 
@@ -124,6 +125,10 @@ func CreateNewStack(logger io.Writer, ctx context.Context, service services.Stac
 	if !IsValidStackType(opts.Type) {
 		return errors.New("invalid stack type. Valid types: " + strings.Join(pkg.Config().VALID_STACKS, ", "))
 	}
+	// validate git repo access
+	if err := git.VerifyAccess(logger, opts.RepoUrl); err != nil {
+		return err
+	}
 	// validate port
 	if err := commands.ValidatePort(opts.Port); err != nil {
 		return err
@@ -157,17 +162,8 @@ func CreateNewStack(logger io.Writer, ctx context.Context, service services.Stac
 		return err
 	}
 	fmt.Fprintln(logger, "🎉 Stack created successfully!")
-	// 	if logger == os.Stdout {
-	// 		fmt.Fprintf(logger, `✅ Stack created successfully!
-
-	//   Run "stackjet deploy -d %s" to deploy
-	//   or "cd %s" then "stackjet deploy -d ./ "
-	// 	`, newStack.Directory, newStack.Directory)
-	// 	}
-
-	// deploy stack
-	if err := DeployStack(logger, ctx, service, &dto.Stack_DeployRequest{Directory: newStack.Directory}); err != nil {
-		return err
+	if logger == os.Stdout {
+		fmt.Fprintf(logger, "✅ Stack created successfully!\n    Run \x1b[34mstackjet deploy -d %s\x1b[0m to deploy \n    or \x1b[34mcd %s\x1b[0m then \x1b[34mstackjet deploy -d ./ \x1b[0m\n\n", newStack.Directory, newStack.Directory)
 	}
 
 	return nil

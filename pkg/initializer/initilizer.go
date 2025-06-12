@@ -42,7 +42,7 @@ func InitializeApp(forceRecreate bool) {
 		}
 	}
 
-	_, err = createStackjetDir()
+	_, err = createStackJetDir()
 	if err != nil {
 		log.Printf("Error creating stackjet directory: %v", err)
 		fmt.Println("❌ StackJet Configuration Error")
@@ -80,7 +80,7 @@ func createLockFile(lockFilePath string) {
 	defer file.Close()
 }
 
-func createStackjetDir() (string, error) {
+func createStackJetDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("could not determine user home directory: %w", err)

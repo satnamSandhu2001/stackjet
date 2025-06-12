@@ -40,22 +40,23 @@ func StartProcess(logger io.Writer, ctx context.Context, service services.StackS
 			return err
 		}
 	}
-	fmt.Fprintln(logger, "\n🚀 Starting pm2 process...")
 
 	// start pm2
 	if !stack.InitialDeploymentSuccess {
-		if _, err := commands.RunCommand(logger, "pm2", "start", "--name", pm2Data.Name, pm2Data.Script); err != nil {
+		fmt.Fprintln(logger, "\n🚀 Starting pm2 process...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"start", "--name", pm2Data.Name, pm2Data.Script}}); err != nil {
 			return err
 		}
 	} else {
-		if _, err := commands.RunCommand(logger, "pm2", "restart", pm2Data.Name); err != nil {
+		fmt.Fprintln(logger, "\n🚀 Restarting pm2 process...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"restart", pm2Data.Name}}); err != nil {
 			return err
 		}
 	}
 	// post script
 	if stack.Commands.Post != "" {
 		fmt.Fprintln(logger, "\n🛠️ Running post commands...")
-		if _, err := commands.RunCommand(logger, "bash", "-c", stack.Commands.Post); err != nil {
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "bash", Args: []string{"-c", stack.Commands.Post}}); err != nil {
 			return err
 		}
 	}
@@ -65,14 +66,14 @@ func StartProcess(logger io.Writer, ctx context.Context, service services.StackS
 	}
 	// save pm2 app list if first deployment
 	if !stack.InitialDeploymentSuccess {
-		commands.RunCommand(logger, "pm2", "save")
+		commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"save"}})
 	}
 
 	fmt.Fprintln(logger, "🚀 pm2 process started successfully")
 	return nil
 }
 func verifyInstallation(logger io.Writer) error {
-	version, err := commands.RunCommand(logger, "pm2", "--version")
+	version, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"--version"}})
 	if err != nil || version == "" {
 		fmt.Fprintln(logger, "Please install pm2 (https://github.com/Unitech/pm2?tab=readme-ov-file#installing-pm2)")
 		return fmt.Errorf("pm2 is not installed: %w", err)

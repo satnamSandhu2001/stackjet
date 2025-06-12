@@ -33,7 +33,7 @@ func DeployStack(logger io.Writer, ctx context.Context, service services.StackSe
 	// install and build commands
 	if stack.Commands.Build != "" {
 		fmt.Fprintln(logger, "\n🛠️ Building application...")
-		if _, err := commands.RunCommand(logger, "bash", "-c", stack.Commands.Build); err != nil {
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "bash", Args: []string{"-c", stack.Commands.Build}}); err != nil {
 			return err
 		}
 	}
@@ -49,7 +49,7 @@ func DeployStack(logger io.Writer, ctx context.Context, service services.StackSe
 }
 
 func verifyInstallation(logger io.Writer) error {
-	if _, err := commands.RunCommand(logger, "node", "--version"); err != nil {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "node", Args: []string{"--version"}}); err != nil {
 		return fmt.Errorf("nodejs is not installed: %w", err)
 	}
 

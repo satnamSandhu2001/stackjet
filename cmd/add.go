@@ -138,7 +138,7 @@ func init() {
 	addCmd.Flags().StringVar(&branch, "branch", "", "Git branch name")
 	addCmd.Flags().StringVar(&remote, "git-remote", "", "Git remote name")
 	addCmd.Flags().StringVar(&buildCommand, "build", "", "Build commands like ('npm i && npm run build', 'mvn clean package', 'gradle build', etc...)")
-	addCmd.Flags().StringVar(&startCommand, "start", "", "App start commands like ('npm run start', 'mvn spring-boot:run', 'gradle bootRun', etc...)")
+	addCmd.Flags().StringVar(&startCommand, "start", "", "App start commands like ('npm start', 'mvn spring-boot:run', 'gradle bootRun', etc...)")
 	addCmd.Flags().StringVar(&postCommand, "post", "", "Post deployment commands like ('npm run post-deploy', 'mvn post-deploy', 'gradle post-deploy', etc...)")
 
 	// register auto completion for stack flag

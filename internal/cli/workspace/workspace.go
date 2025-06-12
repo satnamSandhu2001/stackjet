@@ -15,7 +15,10 @@ func EnterWorkspace(logger io.Writer, stack *models.Stack) error {
 	if err := os.Chdir(stack.Directory); err != nil {
 		return err
 	}
-	checkDir, _ := commands.RunCommand(logger, "pwd")
+	checkDir, _ := commands.RunCommand(commands.RunCommandArgs{
+		Logger: logger,
+		Name:   "pwd",
+	})
 	fmt.Fprintf(logger, "📁 Working dir: %v \n", checkDir)
 
 	return nil

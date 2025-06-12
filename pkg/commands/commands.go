@@ -10,25 +10,42 @@ import (
 	"strings"
 )
 
+type RunCommandArgs struct {
+	Logger io.Writer
+	Name   string
+	Args   []string
+	Env    map[string]string
+}
+
 // RunCommand runs a command with the given name and arguments
-func RunCommand(logger io.Writer, name string, args ...string) (string, error) {
+func RunCommand(args RunCommandArgs) (string, error) {
 	// if cmd.Verbose {
-	fmt.Fprintf(logger, "executing: %s %s\n", name, strings.Join(args, " "))
+	envVarsList := make([]string, 0, len(args.Env))
+	for k, v := range args.Env {
+		envVarsList = append(envVarsList, fmt.Sprintf("%s=%v", k, v))
+	}
+	fmt.Fprintf(args.Logger, "Executing: %s %s %s\n", strings.Join(envVarsList, " "), args.Name, strings.Join(args.Args, " "))
 	// }
 
 	// Create command
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command(args.Name, args.Args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	cmd.Env = os.Environ()
+
+	// Set environment variables
+	for key, value := range args.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	}
 
 	// run command
 	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintf(logger, "⭕ command Failed: %v, %v, %s\n", name, err, stderr.String())
-		return stdout.String(), fmt.Errorf("%v: %v\n%s", name, err, stderr.String())
+		fmt.Fprintf(args.Logger, "⭕ command Failed: %v, %v, %s\n", args.Name, err, stderr.String())
+		return stdout.String(), fmt.Errorf("%v: %v\n%s", args.Name, err, stderr.String())
 	}
-	fmt.Fprintln(logger, stdout.String())
+	fmt.Fprintln(args.Logger, stdout.String())
 	return stdout.String(), nil
 }
 

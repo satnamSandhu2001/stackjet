@@ -53,15 +53,9 @@ This includes:
   - Managing SSL certificates
   - Syncing DNS and proxy settings via Cloudflare
 
-Stackjet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
+StackJet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// set default values
-		if gitBranch == "" {
-			gitBranch = pkg.Config().GIT_BRANCH
-		}
-		if gitRemote == "" {
-			gitRemote = pkg.Config().GIT_REMOTE
-		}
 		if !cmd.Flags().Changed("git-reset") {
 			gitReset = pkg.Config().GIT_RESET
 		}

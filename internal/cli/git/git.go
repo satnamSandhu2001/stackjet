@@ -11,6 +11,16 @@ import (
 	"github.com/satnamSandhu2001/stackjet/pkg/commands"
 )
 
+// Verifies access to git repo
+func VerifyAccess(logger io.Writer, repoUrl string) error {
+	repoUrl = strings.TrimSpace(repoUrl)
+	fmt.Fprintln(logger, "\n📡 Verifying Git Repo Access ...")
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"ls-remote", repoUrl}, Env: map[string]string{"GIT_TERMINAL_PROMPT": "0"}}); err != nil {
+		return err
+	}
+	return nil
+}
+
 func CloneRepo(logger io.Writer, gitRepo string, gitBranch string, gitRemote string) error {
 	// trim whitespace from input strings
 	gitRepo = strings.TrimSpace(gitRepo)
@@ -19,13 +29,13 @@ func CloneRepo(logger io.Writer, gitRepo string, gitBranch string, gitRemote str
 
 	// clone git repo
 	fmt.Fprintln(logger, "\n📡 Cloning Repository ...")
-	if _, err := commands.RunCommand(logger, "git", "clone", "-b", gitBranch, "-o", gitRemote, gitRepo, "."); err != nil {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"clone", "-b", gitBranch, "-o", gitRemote, gitRepo, "."}}); err != nil {
 		return err
 	}
 
 	// switch to specified branch
 	fmt.Fprintf(logger, "\n⛓ Changing git branch to %v \n", gitBranch)
-	if _, err := commands.RunCommand(logger, "git", "checkout", gitBranch); err != nil {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"checkout", gitBranch}}); err != nil {
 		return err
 	}
 
@@ -40,7 +50,7 @@ func UpdateRepo(logger io.Writer, ctx context.Context, service services.StackSer
 	gitHash = strings.TrimSpace(gitHash)
 
 	// get current active branch
-	activeBranch, err := commands.RunCommand(logger, "git", "branch", "--show-current")
+	activeBranch, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"branch", "--show-current"}})
 	if err != nil {
 		return err
 	}
@@ -48,34 +58,34 @@ func UpdateRepo(logger io.Writer, ctx context.Context, service services.StackSer
 	// switch to specified branch if it's different from the current branch
 	if strings.TrimSpace(activeBranch) != gitBranch {
 		fmt.Fprintf(logger, "\n⛓ Changing git branch to %v \n", gitBranch)
-		if _, err := commands.RunCommand(logger, "git", "checkout", gitBranch); err != nil {
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"checkout", gitBranch}}); err != nil {
 			return err
 		}
 	}
 
 	// fetch git status
 	fmt.Fprintln(logger, "\n🖇 Checking Git Status")
-	if _, err := commands.RunCommand(logger, "git", "fetch", "--all", "--tags"); err != nil {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"fetch", "--all", "--tags"}}); err != nil {
 		return err
 	}
 
 	// reset to specific commit if gitHash is provided
 	if gitHash != "" {
 		fmt.Fprintln(logger, "\n🎯 Resetting git to specific commit...")
-		if _, err := commands.RunCommand(logger, "git", "reset", "--hard", gitHash); err != nil {
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"reset", "--hard", gitHash}}); err != nil {
 			return err
 		}
 		return nil // no need to pull latest
 
 	} else if gitReset { // force reset git state if gitReset is true
 		fmt.Fprintln(logger, "\n🧹 Forcing clean state with git reset...")
-		if _, err := commands.RunCommand(logger, "git", "reset", "--hard", "origin/"+gitBranch); err != nil {
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"reset", "--hard", "origin/" + gitBranch}}); err != nil {
 			return err
 		}
 	}
 
 	// check if there are any commits behind the remote branch
-	gitStatus, err := commands.RunCommand(logger, "git", "rev-list", "--count", fmt.Sprintf("HEAD...%s/%s", gitRemote, gitBranch))
+	gitStatus, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"rev-list", "--count", fmt.Sprintf("HEAD...%s/%s", gitRemote, gitBranch)}})
 	if err != nil {
 		return err
 	}
@@ -87,12 +97,11 @@ func UpdateRepo(logger io.Writer, ctx context.Context, service services.StackSer
 
 	// pull latest changes from remote branch
 	fmt.Fprintln(logger, "\n🔄 Pulling latest changes...")
-
-	if _, err := commands.RunCommand(logger, "git", "pull", gitRemote, gitBranch); err != nil {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"pull", gitRemote, gitBranch}}); err != nil {
 		return err
 	}
 
-	currentHash, err := commands.RunCommand(logger, "git", "rev-parse", "HEAD")
+	currentHash, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "git", Args: []string{"rev-parse", "HEAD"}})
 	if err != nil {
 		return err
 	}

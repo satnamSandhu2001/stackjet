@@ -37,7 +37,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		initializer.InitializeApp(forceRecreateConfig)
-		fmt.Println("✅ Stackjet initialized successfully.")
+		fmt.Println("✅ StackJet initialized successfully.")
 		fmt.Print("\nRun \033[1;34mstackjet add --tech nodejs -p 3000 -repo <git repo url>\033[0m to add new app.\n\n")
 		fmt.Print("\nOr \033[1;34mstackjet add --help\033[0m for more information.\n\n")
 	},
