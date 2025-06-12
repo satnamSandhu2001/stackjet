@@ -28,13 +28,21 @@ var forceRecreateConfig bool
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Initialize StackJet configuration and database",
+	Long: `Initialize StackJet in your environment by setting up the necessary configuration files and database.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This command creates the required configuration structure and prepares StackJet for managing your applications.
+Run this command once after installation to set up StackJet.
+
+Examples:
+  # Initialize StackJet with default settings
+  stackjet init
+
+  # Force recreate configuration (overwrites existing config)
+  stackjet init --force
+
+After initialization, you can add your first application:
+  stackjet add --tech nodejs -p 3000 --repo https://github.com/username/my-app.git`,
 	Run: func(cmd *cobra.Command, args []string) {
 		initializer.InitializeApp(forceRecreateConfig)
 		fmt.Println("✅ StackJet initialized successfully.")
@@ -45,5 +53,5 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-	initCmd.Flags().BoolVarP(&forceRecreateConfig, "force", "f", false, "Force recreate config. Use with caution! This will overwrite existing config.")
+	initCmd.Flags().BoolVarP(&forceRecreateConfig, "force", "f", false, "Force recreate config. Use with caution! This will overwrite existing config and and remove all apps data from StackJet (except app folders)")
 }

@@ -47,13 +47,40 @@ var (
 // addCmd represents the add command
 var addCmd = &cobra.Command{
 	Use:   "add",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Add a new application to StackJet for deployment management",
+	Long: `Add a new application to StackJet's deployment pipeline. This command registers your application
+with StackJet and prepares it for automated deployments.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Currently supported technology stacks:
+  - nodejs: Node.js applications with PM2 process management
+
+Required information:
+  - Technology stack type (--tech)
+  - Git repository URL (--repo)
+  - Application port (--port)
+
+Optional customizations:
+  - Custom build commands (--build)
+  - Custom start commands (--start, defaults to "npm start" for Node.js)
+  - Post-deployment commands (--post)
+  - Git branch and remote settings
+
+Examples:
+  # Add a basic Node.js application
+  stackjet add --tech nodejs --port 3000 --repo https://github.com/username/my-app.git
+
+  # Add with custom commands
+  stackjet add --tech nodejs --port 8080 --repo https://github.com/username/api.git \
+    --build "npm install && npm run build" \
+    --start "npm run prod" \
+    --post "npm run migrate"
+
+  # Add with specific branch
+  stackjet add --tech nodejs --port 3000 --repo https://github.com/username/app.git \
+    --branch production
+
+After adding an application, deploy it with:
+  stackjet deploy --dir /path/to/deployed/app`,
 
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// validate stack flag
@@ -132,14 +159,14 @@ func init() {
 
 	rootCmd.AddCommand(addCmd)
 
-	addCmd.Flags().StringVarP(&stackType, "tech", "t", "", "App's Technology Stack Type")
+	addCmd.Flags().StringVarP(&stackType, "tech", "t", "", "App's Technology Stack Type (currently supports: nodejs)")
 	addCmd.Flags().StringVarP(&repoUrl, "repo", "r", "", "Git repository URL")
-	addCmd.Flags().IntVarP(&port, "port", "p", 0, "Port number")
-	addCmd.Flags().StringVar(&branch, "branch", "", "Git branch name")
-	addCmd.Flags().StringVar(&remote, "git-remote", "", "Git remote name")
-	addCmd.Flags().StringVar(&buildCommand, "build", "", "Build commands like ('npm i && npm run build', 'mvn clean package', 'gradle build', etc...)")
-	addCmd.Flags().StringVar(&startCommand, "start", "", "App start commands like ('npm start', 'mvn spring-boot:run', 'gradle bootRun', etc...)")
-	addCmd.Flags().StringVar(&postCommand, "post", "", "Post deployment commands like ('npm run post-deploy', 'mvn post-deploy', 'gradle post-deploy', etc...)")
+	addCmd.Flags().IntVarP(&port, "port", "p", 0, "Port number for the application")
+	addCmd.Flags().StringVar(&branch, "branch", "", "Git branch name (default master)")
+	addCmd.Flags().StringVar(&remote, "git-remote", "", "Git remote name (default origin)")
+	addCmd.Flags().StringVar(&buildCommand, "build", "", "Build commands (e.g. 'npm i && npm run build', 'mvn clean package', 'gradle build', etc...)")
+	addCmd.Flags().StringVar(&startCommand, "start", "", "App start commands (e.g. 'npm start', 'mvn spring-boot:run', 'gradle bootRun', etc...)")
+	addCmd.Flags().StringVar(&postCommand, "post", "", "Post deployment commands (e.g. 'npm run post-deploy', 'mvn post-deploy', 'gradle post-deploy', etc...)")
 
 	// register auto completion for stack flag
 	addCmd.RegisterFlagCompletionFunc("stack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {

@@ -50,7 +50,7 @@ Add a new application to StackJet for deployment management:
 stackjet add [OPTIONS]
 
 Required Options:
-  -t, --tech string       App's Technology Stack Type (currently supports: nodejs)
+  -t, --tech string       Application Technology Stack Type (currently supports: nodejs)
   -r, --repo string       Git repository URL
   -p, --port int          Port number for the application
 

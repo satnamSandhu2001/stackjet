@@ -43,17 +43,38 @@ var (
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy your app with Git sync, NGINX, SSL, service restarts and more",
-	Long: `Deploy your application end-to-end with a single command.
+	Long: `Deploy your application end-to-end with automated Git synchronization and process management.
 
-This includes:
-  - Pulling the latest code from Git (with optional rollback)
-  - Restarting required services to bring your app live (e.g., pm2, systemd, etc.)
-  - Logging and error handling with rollback to a previous version
-  - Updating NGINX configuration
-  - Managing SSL certificates
-  - Syncing DNS and proxy settings via Cloudflare
+This command handles the complete deployment workflow:
+  - Pulls the latest code from your Git repository
+  - Executes build commands if specified
+  - Manages application processes (PM2 for Node.js applications)
+  - Executes post-deployment commands
+  - Provides rollback capabilities to specific commits
 
-StackJet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
+The deployment works with applications previously added via 'stackjet add' command.
+StackJet automatically detects the application configuration from the target directory.
+
+Examples:
+  # Deploy from current directory
+  stackjet deploy
+
+  # Deploy from specific directory
+  stackjet deploy --dir "/var/www/sites/my-app"
+
+  # Deploy specific branch
+  stackjet deploy --branch "production"
+
+  # Deploy with custom git remote
+  stackjet deploy --git-remote "upstream" --branch "main"
+
+  # Rollback to specific commit
+  stackjet deploy --git-hash "abc123def456"
+
+  # Deploy without git reset (preserve local changes)
+  stackjet deploy --git-reset=false
+
+Note: The directory must contain a StackJet-managed application (added via 'stackjet add').`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// set default values
 		if !cmd.Flags().Changed("git-reset") {
@@ -82,10 +103,10 @@ StackJet works via CLI, webhook triggers, or a web panel — making deployments 
 func init() {
 	rootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringVarP(&dir, "dir", "d", "./", "Root directory of project")
-	deployCmd.Flags().StringVar(&gitBranch, "branch", "", "Git branch name")
-	deployCmd.Flags().StringVar(&gitRemote, "git-remote", "", "Git remote name")
+	deployCmd.Flags().StringVarP(&dir, "dir", "d", "./", "Root directory of the project to deploy")
+	deployCmd.Flags().StringVar(&gitBranch, "branch", "", "Git branch name to deploy")
+	deployCmd.Flags().StringVar(&gitRemote, "git-remote", "", "Git remote name (e.g., 'origin', 'upstream')")
 	deployCmd.Flags().StringVar(&gitHash, "git-hash", "", "Rollback to specific commit hash")
-	deployCmd.Flags().BoolVar(&gitReset, "git-reset", true, "Force reset git state")
+	deployCmd.Flags().BoolVar(&gitReset, "git-reset", true, "Force reset Git state before deployment")
 
 }

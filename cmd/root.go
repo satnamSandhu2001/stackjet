@@ -30,6 +30,7 @@ var rootCmd = &cobra.Command{
 	Long: `StackJet is a modern deployment automation tool built for developers managing multi-framework applications.
 
 With StackJet, you can:
+  - Add and manage multiple applications with different technology stacks
   - Pull and sync code from Git repositories (with optional rollback)
   - Restart required services for your tech stack (PM2, systemd, supervisor, etc.)
   - Handle builds, migrations, and runtime prep (Spring Boot, Django, Laravel, Go, Node.js)
@@ -38,7 +39,15 @@ With StackJet, you can:
   - Sync DNS records and proxy rules via Cloudflare
   - Trigger deployments via CLI, webhook, or web panel
 
-Whether it's a Spring Boot JAR, a Go binary, Django with Gunicorn, npm scripts or Laravel app with Artisan — StackJet ensures consistent, reliable deployment every time.`,
+Whether it's a Spring Boot JAR, a Go binary, Django with Gunicorn, npm scripts or Laravel app with Artisan — StackJet ensures consistent, reliable deployment every time.
+
+Currently supports Node.js applications with PM2 integration, with more stacks coming soon.
+
+Get started:
+  1. Run 'stackjet init' to initialize StackJet
+  2. Add your first app with 'stackjet add --tech nodejs -p 3000 --repo <your-git-repo>'
+  3. Deploy with 'stackjet deploy'
+`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		printBanner()
 	},
