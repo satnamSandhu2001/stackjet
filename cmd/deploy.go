@@ -17,21 +17,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
 
-	"github.com/satnamSandhu2001/stackjet/internal/cli/git"
-	"github.com/satnamSandhu2001/stackjet/internal/cli/workspace"
+	"github.com/satnamSandhu2001/stackjet/database"
+	"github.com/satnamSandhu2001/stackjet/internal/cli/stack"
+	"github.com/satnamSandhu2001/stackjet/internal/dto"
+	"github.com/satnamSandhu2001/stackjet/internal/services"
 	"github.com/satnamSandhu2001/stackjet/pkg"
 	"github.com/spf13/cobra"
 )
 
 // flags
 var (
-	dir       string
+	dir string
+
 	gitBranch string
 	gitRemote string
 	gitReset  bool
-	gitSkip   bool
 	gitHash   string
 )
 
@@ -49,29 +53,39 @@ This includes:
   - Managing SSL certificates
   - Syncing DNS and proxy settings via Cloudflare
 
-Stackjet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
+StackJet works via CLI, webhook triggers, or a web panel — making deployments simple, repeatable, and reliable.`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// set default values
+		if !cmd.Flags().Changed("git-reset") {
+			gitReset = pkg.Config().GIT_RESET
+		}
+		return nil
 
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// workspace logic
-		if err := workspace.EnterWorkspace(dir); err != nil {
+		dbConn := database.Connect()
+		defer dbConn.Close()
+		stackService := services.NewStackService(dbConn)
+
+		// deploy stack logic
+		if err := stack.DeployStack(os.Stdout, context.Background(), *stackService, &dto.Stack_DeployRequest{
+			Directory: dir,
+			Remote:    gitRemote,
+			Branch:    gitBranch,
+		}); err != nil {
+			fmt.Printf("⭕ Failed to deploy stack: %s\n", err)
 			return
 		}
-
-		// git logic
-		if err := git.UpdateRepo(gitBranch, gitRemote, gitReset, gitSkip, gitHash); err != nil {
-			return
-		}
-
-		fmt.Println("\n✅ Deployment complete!")
 
 	}}
 
 func init() {
 	rootCmd.AddCommand(deployCmd)
+
 	deployCmd.Flags().StringVarP(&dir, "dir", "d", "./", "Root directory of project")
-	deployCmd.Flags().StringVarP(&gitBranch, "branch", "b", pkg.Config().GIT_BRANCH, "Git branch name")
-	deployCmd.Flags().StringVar(&gitRemote, "git-remote", pkg.Config().GIT_REMOTE, "Git remote name")
+	deployCmd.Flags().StringVar(&gitBranch, "branch", "", "Git branch name")
+	deployCmd.Flags().StringVar(&gitRemote, "git-remote", "", "Git remote name")
 	deployCmd.Flags().StringVar(&gitHash, "git-hash", "", "Rollback to specific commit hash")
-	deployCmd.Flags().BoolVar(&gitReset, "git-reset", pkg.Config().GIT_RESET, "Force reset git state")
-	deployCmd.Flags().BoolVar(&gitSkip, "git-skip", false, "Skip git repo update")
+	deployCmd.Flags().BoolVar(&gitReset, "git-reset", true, "Force reset git state")
+
 }

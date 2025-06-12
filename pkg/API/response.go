@@ -74,3 +74,33 @@ func SendJWTtoken(c *gin.Context, token string, message string, data any) {
 	c.SetCookie("Authorization", "Bearer "+token, 3400*24*30, "", "", false, true)
 	Success(c, message, data)
 }
+
+// StreamWriter is a writer that flushes after each Write call
+type StreamWriter struct {
+	writer  http.ResponseWriter
+	flusher http.Flusher
+}
+
+func NewStreamWriter(c *gin.Context) *StreamWriter {
+	w := c.Writer
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return nil
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Transfer-Encoding", "chunked")
+	w.WriteHeader(http.StatusOK)
+
+	return &StreamWriter{
+		writer:  w,
+		flusher: flusher,
+	}
+}
+func (s *StreamWriter) Write(p []byte) (n int, err error) {
+	n, err = s.writer.Write(p)
+	s.flusher.Flush()
+	return n, err
+}
+func (s *StreamWriter) WriteString(msg string) (int, error) {
+	return s.Write([]byte(msg))
+}

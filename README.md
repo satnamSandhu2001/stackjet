@@ -6,16 +6,17 @@ A powerful and easy-to-use CLI + UI tool for multistack automated deployment and
 
 ## Overview
 
-A powerful, lightweight deployment automation tool written in Go for streamlined Git-based deployments. `stackjet` is perfect for automating server deployments with minimal configuration.
+A powerful, lightweight deployment automation tool written in Go for streamlined Git-based deployments. `stackjet` is perfect for automating server deployments with minimal configuration and aims to support multiple technology stacks including Node.js, Golang, Java, Python and PHP.
 
 ## ✨ Features
 
 - **Git-based Deployments**: Automatically pull latest changes from your Git repository
 - **Branch Management**: Switch between branches seamlessly during deployment
 - **Smart Updates**: Only deploy when there are actual changes to pull
+- **Custom Commands**: Configurable build, start, and post-deployment commands
 - **Verbose Logging**: Detailed output for debugging and monitoring
 - **Force Reset**: Clean slate deployments with git reset functionality
-- **Flexible Configuration**: Customizable working directories, branches, and remotes
+- **Flexible Configuration**: Customize StackJet's behavior based on your needs and preferences
 
 ## 🛠 Installation
 
@@ -27,86 +28,173 @@ A powerful, lightweight deployment automation tool written in Go for streamlined
 curl -sSL https://raw.githubusercontent.com/satnamSandhu2001/StackJet/master/install.sh | bash
 ```
 
-### From Source
-
-```bash
-git clone https://github.com/satnamSandhu2001/StackJet.git
-cd StackJet
-go build -o stackjet main.go
-sudo mv stackjet /usr/local/bin/
-```
-
 ## 🚦 Usage
 
-### Basic Usage
+### Initialize StackJet
+
+Before using StackJet, initialize it in your environment:
 
 ```bash
-stackjet -h
+stackjet init
+
+Options:
+  -f, --force    Force recreate config (Use with caution! This will overwrite any existing config)
+  -h, --help     Show help message
 ```
 
-#### deploy
+### Add New Application
+
+Add a new application to StackJet for deployment management:
+
+```bash
+stackjet add [OPTIONS]
+
+Required Options:
+  -t, --tech string       App's Technology Stack Type (currently supports: nodejs)
+  -r, --repo string       Git repository URL
+  -p, --port int          Port number for the application
+
+Optional Options:
+  --branch string         Git branch name (default from config)
+  --git-remote string     Git remote name (default from config)
+  --build string          Build commands (e.g., 'npm install && npm run build')
+  --start string          App start commands (e.g., 'npm start') default is 'npm start'
+  --post string           Post deployment commands (e.g., 'npm run post-deploy')
+  -h, --help              Show help message
+```
+
+#### Examples for Add Command
+
+**Add a Node.js application:**
+
+```bash
+stackjet add --tech nodejs -p 3000 --repo https://github.com/username/my-app.git
+```
+
+**Add with custom build and start commands:**
+
+```bash
+stackjet add --tech nodejs -p 8080 --repo https://github.com/username/my-app.git \
+  --build "npm install && npm run build" \
+  --start "npm run prod" \
+  --post "npm run migrate"
+```
+
+**Add with specific branch:**
+
+```bash
+stackjet add --tech nodejs -p 3000 --repo https://github.com/username/my-app.git \
+  --branch production --git-remote upstream
+```
+
+### Deploy Application
+
+Deploy your application with Git sync, process management, and more:
 
 ```bash
 stackjet deploy [OPTIONS]
 
 Options:
-  --dir string             Root directory of project (default "./")
-  --branch string          Git branch name to deploy (default "master")
-  --git-remote string      Git remote name (default "origin")
-  --git-hash string        Rollback to specific commit hash
-  --git-skip               Skips git repo update
-  --git-reset              Force reset Git state before deployment
-  -h                       Show help message
-  -v                       Show detailed output during execution
+  -d, --dir string        Root directory of project (default "./")
+  --branch string         Git branch name to deploy
+  --git-remote string     Git remote name
+  --git-hash string       Rollback to specific commit hash
+  --git-reset             Force reset Git state before deployment (default true)
+  -h, --help              Show help message
 ```
 
-#### Examples
+#### Examples for Deploy Command
 
-**Deploy from a specific directory:**
+**Deploy from current directory:**
 
 ```bash
-stackjet deploy --dir "/home/path-to-project"
+stackjet deploy
 ```
 
-**Deploy specific branch with verbose output:**
+**Deploy from specific directory:**
+
+```bash
+stackjet deploy --dir "/var/www/sites/<You will recieve directory path when you add new app to stackjet>"
+```
+
+**Deploy specific branch:**
 
 ```bash
 stackjet deploy --branch "production"
 ```
 
-**Force clean deployment:**
+**Rollback to specific commit:**
 
 ```bash
-stackjet deploy --git-hash "your-commit-hash"
+stackjet deploy --git-hash "abc123def456"
 ```
 
-**Deploy from custom remote:**
+## 🔧 Technology Stack Support
 
-```bash
-stackjet deploy --git-remote "upstream" --branch "development"
-```
+### Node.js Applications
+
+StackJet provides comprehensive support for Node.js applications with PM2 integration:
+
+- **Automatic PM2 Setup**: Process management with PM2 for production deployments
+- **Custom Start Commands**: Support for various Node.js start commands
+- **Build Process**: Configurable build commands for compilation and optimization
+- **Post-Deployment Hooks**: Execute custom commands after deployment
+
+**Supported Node.js Commands:**
+Start commands must be in the format: `[npm|yarn|pnpm] [<script name>]` without any extra args. args must be embedded in package file.
+
+For example:
+
+- `npm start`
+- `npm run prod`
+- `yarn dev:server`
+- `npm start:prod`
+
+**Default Behavior:**
+
+- If no start command is specified, defaults to `npm start`
+- Build commands are optional and executed before starting the application
+- Post commands run after successful deployment
+
+### Upcoming Stack Support
+
+- **Java/Spring Boot**: Spring Boot application deployment and management
+- **Python/Django**: Complete Django application deployment pipeline
+- **PHP/Laravel**: PHP application deployment with Composer integration
+- **Static Sites**: Static site deployments
+- **Docker Support**: Containerized application deployment
 
 ## 📋 Prerequisites
 
 - Git installed and configured
-- Proper Git repository with remote configured
-- Appropriate file permissions for the target directory
+- (For Node.js applications only) Node.js, [npm|yarn|pnpm] and [PM2](https://pm2.keymetrics.io/docs/usage/quick-start) installed
 
-## 🔧 How It Works
+## 🔧 How StackJet Works
 
-1. **Validation**: Checks if the target directory is a valid Git repository
-2. **Branch Management**: Switches to the specified branch if needed
-3. **State Management**: Optionally resets Git state for clean deployments
-4. **Update Check**: Compares local and remote commits to determine if updates are needed
-5. **Deployment**: Pulls latest changes only when necessary
-6. **Feedback**: Provides clear status updates throughout the process
+### Application Addition Flow
+
+1. **Stack Validation**: Validates the specified technology stack
+2. **Repository Setup**: Validates Git repository URL and accessibility
+3. **Port Management**: Checks port availability and validates port numbers
+4. **Command Validation**: Validates start commands for the specified stack
+5. **Database Storage**: Stores application configuration for future deployments
+
+### Deployment Flow
+
+1. **Configuration Loading**: Loads application configuration from database
+2. **Git Operations**: Handles branch switching, pulling, and reset operations
+3. **Build Process**: Executes build commands if specified
+4. **Process Management**: Manages application processes (PM2 for Node.js)
+5. **Health Checks**: Verifies successful deployment
+6. **Post-Deployment**: Executes post-deployment commands
 
 ## 🎯 Use Cases
 
-- **Web Server Deployments**: Automate updates to web applications
+- **Node.js Web Applications**: Deploy Express.js, React.js, Angular.js, Vue.js Koa.js, or any Node.js based applications
+- **API Services**: Deploy REST APIs and microservices
+- **Full-Stack Applications**: Deploy complete web applications with frontend and backend
 - **CI/CD Integration**: Integrate with continuous deployment pipelines
-- **Server Management**: Streamline multiple server deployments
-- **Development Workflows**: Quick testing environment updates
+- **Multi-Environment Deployments**: Manage development, staging, and production deployments
 
 ## 🔮 Roadmap & Upcoming Features
 
@@ -126,29 +214,29 @@ stackjet deploy --git-remote "upstream" --branch "development"
 
 ### ⚙️ Infrastructure Automation
 
-- **PM2 Integration**: Automatic process management and restart
+- **Enhanced PM2 Integration**: Advanced PM2 configuration and monitoring
 - **Nginx Configuration**: Dynamic virtual host and reverse proxy setup
 - **Cloudflare Integration**: DNS and CDN configuration automation
 - **SSL Certificate Management**: Automatic HTTPS setup with Let's Encrypt
 
-### 🌍 Multi-Language & Framework Support
+### 🌍 Enhanced Multi-Language Support
 
 - **Python/Django**: Complete Django application deployment pipeline
 - **Java/Spring Boot**: Spring Boot application deployment and management
-- **Node.js/Express**: JavaScript application deployment automation
 - **PHP/Laravel**: PHP application deployment with Composer integration
-- **Frontend frameworks/ Static Sites**: Static sites and frameworks like React/angular/vue/Nextjs
+- **Frontend Frameworks**: Static sites and SPAs (React, Angular, Vue, Next.js)
 - **Docker Support**: Containerized application deployment
 - **Database Migrations**: Automatic database schema updates
 
 ### 🔧 Enhanced Features
 
 - **Configuration Templates**: Predefined deployment configurations
-- **Rollback Capabilities**: Quick rollback to previous deployments
+- **Advanced Rollback**: Quick rollback to previous deployments with history
 - **Health Checks**: Application health monitoring post-deployment
 - **Notification System**: Slack, Discord, email notifications
 - **Deployment Scheduling**: Cron-like deployment scheduling
 - **Environment Management**: Multiple environment support (dev, staging, prod)
+- **Load Balancing**: Automatic load balancer configuration
 
 ## 🤝 Contributing
 
@@ -188,4 +276,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⭐ Star this repository if you find it useful!**
 
-_Stackjet - Deploy smarter - Fly faster._
+_StackJet - Deploy Fast, Fly High!_
