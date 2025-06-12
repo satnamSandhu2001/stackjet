@@ -1,9 +1,0 @@
-DROP TABLE IF EXISTS stacks;
-
-DROP TABLE IF EXISTS pm2_configs;
-
-DROP TABLE IF EXISTS nginx_configs;
-
-DROP TABLE IF EXISTS deployments;
-
-DROP TABLE IF EXISTS env_vars;

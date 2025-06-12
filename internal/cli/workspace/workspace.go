@@ -2,36 +2,21 @@ package workspace
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"regexp"
-	"strings"
 
+	"github.com/satnamSandhu2001/stackjet/internal/models"
 	"github.com/satnamSandhu2001/stackjet/pkg/commands"
 )
 
-// Returns base folder's (originalName, formattedName, error)
-func BaseFolderName(path string) (string, string, error) {
-
-	trimmed := strings.TrimRight(path, "/")
-	originalName := strings.TrimSpace(trimmed[strings.LastIndex(trimmed, "/")+1:])
-	formattedName := strings.ToUpper(regexp.MustCompile(`[-_]`).ReplaceAllString(originalName, " "))
-	return originalName, formattedName, nil
-}
-
 // Enter workspace of the project
-func EnterWorkspace(path string) error {
-	_, folderNameFormatted, err := BaseFolderName(path)
-	if err != nil {
+func EnterWorkspace(logger io.Writer, stack *models.Stack) error {
+	fmt.Fprintln(logger, "📁 Entering workspace...")
+	if err := os.Chdir(stack.Directory); err != nil {
 		return err
 	}
-
-	fmt.Printf("\n------ Deploying: %s ------\n", folderNameFormatted)
-
-	checkDir, _ := commands.RunCommand("pwd")
-	if err := os.Chdir(path); err != nil {
-		return err
-	}
-	fmt.Printf("📁 Working dir: %v \n", checkDir)
+	checkDir, _ := commands.RunCommand(logger, "pwd")
+	fmt.Fprintf(logger, "📁 Working dir: %v \n", checkDir)
 
 	return nil
 }

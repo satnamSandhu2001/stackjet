@@ -23,10 +23,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	verbose bool
-)
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "stackjet",
@@ -43,13 +39,8 @@ With Stackjet, you can:
   - Trigger deployments via CLI, webhook, or web panel
 
 Whether it's a Spring Boot JAR, a Go binary, Django with Gunicorn, npm scripts or Laravel app with Artisan — Stackjet ensures consistent, reliable deployment every time.`,
-
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		printBanner()
-
-		if verbose {
-			fmt.Println("🔧 Verbose mode enabled")
-		}
 	},
 }
 
@@ -61,13 +52,13 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+
 }
 
 func printBanner() {
 	fmt.Printf(`%s%s
 	╭─────────────────────────╮
-	│     🚀 Stackjet 🚀      │
+	│     🚀 StackJet 🚀      │
 	╰─────────────────────────╯
 	   Deploy Fast, Fly High!
 %s%s`, "\033[1m", "\033[32m", "\033[0m", "\n\n")

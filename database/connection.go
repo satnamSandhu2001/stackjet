@@ -3,9 +3,8 @@ package database
 import (
 	"log"
 
-	"github.com/satnamSandhu2001/stackjet/pkg"
-
 	"github.com/jmoiron/sqlx"
+	"github.com/satnamSandhu2001/stackjet/pkg"
 	_ "modernc.org/sqlite"
 )
 

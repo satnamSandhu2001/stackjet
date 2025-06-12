@@ -6,13 +6,16 @@ import (
 	"github.com/satnamSandhu2001/stackjet/database"
 	"github.com/satnamSandhu2001/stackjet/internal/routers"
 	"github.com/satnamSandhu2001/stackjet/pkg"
-
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/satnamSandhu2001/stackjet/pkg/initializer"
 )
+
+func init() {
+	initializer.InitializeApp(false)
+}
 
 func main() {
 	conn := database.Connect()
-	database.RunMigrations(conn)
+	defer conn.Close()
 
 	r := routers.InitRouter(conn)
 	r.SetTrustedProxies(nil)

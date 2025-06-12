@@ -1,15 +1,13 @@
 package handlers
 
 import (
-	"fmt"
-	"slices"
-
 	"github.com/gin-gonic/gin"
+	"github.com/satnamSandhu2001/stackjet/internal/cli/stack"
 	"github.com/satnamSandhu2001/stackjet/internal/dto"
 	"github.com/satnamSandhu2001/stackjet/internal/services"
 	"github.com/satnamSandhu2001/stackjet/pkg"
 	"github.com/satnamSandhu2001/stackjet/pkg/API"
-	"github.com/satnamSandhu2001/stackjet/pkg/commands"
+	"github.com/satnamSandhu2001/stackjet/pkg/helpers"
 )
 
 type StackHandler struct {
@@ -29,25 +27,38 @@ func (h *StackHandler) CreateNewStack(c *gin.Context) {
 		API.ValidationsErrors(c, errors)
 		return
 	}
-	if !slices.Contains(pkg.Config().VALID_STACKS, body.Type) {
-		API.Error(c, "Invalid stack type")
-		return
 
+	// validate start command
+	if body.Commands.Start != "" {
+		switch body.Type {
+		case "nodejs":
+			if err := helpers.ValidateNodeStartCommand(body.Commands.Start); err != nil {
+				API.Error(c, err.Error())
+				return
+			}
+		}
 	}
-	if body.Port < 1024 {
-		API.Error(c, "Invalid port number")
-		return
+	if body.Commands.Start == "" {
+		switch body.Type {
+		case "nodejs":
+			body.Commands.Start = "npm start"
+		}
 	}
-	if isFree := commands.IsPortFree(body.Port); !isFree {
-		API.Error(c, fmt.Sprintf("Port %d is in use or blocked", body.Port))
+
+	// handle stream
+	stream := API.NewStreamWriter(c)
+	if stream == nil {
+		API.InternalServerError(c, "Streaming not supported", nil)
 		return
 	}
 
-	if err := h.service.CreateStack(c.Request.Context(), &body); err != nil {
-		API.InternalServerError(c, "Failed to create stack", err)
+	logger := helpers.NewMultiLogger(stream)
+	err := stack.CreateNewStack(logger, c.Request.Context(), h.service, &body)
+
+	if err != nil {
+		stream.WriteString("__ERROR__:" + err.Error() + "\n")
 		return
 	}
 
-	API.Success(c, "Stack created successfully", nil)
-
+	stream.WriteString("__SUCCESS__\n")
 }

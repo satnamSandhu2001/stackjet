@@ -35,7 +35,7 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 	stackHandler := handlers.NewStackHandler(stackService)
 	stackGroup := v1.Group("/stack", middlewares.AuthMiddleware(userService))
 	{
-		stackGroup.POST("", stackHandler.CreateNewStack)
+		stackGroup.POST("/new", stackHandler.CreateNewStack)
 	}
 
 	return router

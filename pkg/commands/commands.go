@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -10,9 +11,9 @@ import (
 )
 
 // RunCommand runs a command with the given name and arguments
-func RunCommand(name string, args ...string) (string, error) {
+func RunCommand(logger io.Writer, name string, args ...string) (string, error) {
 	// if cmd.Verbose {
-	fmt.Printf("executing: %s %s\n", name, strings.Join(args, " "))
+	fmt.Fprintf(logger, "executing: %s %s\n", name, strings.Join(args, " "))
 	// }
 
 	// Create command
@@ -24,39 +25,51 @@ func RunCommand(name string, args ...string) (string, error) {
 	// run command
 	err := cmd.Run()
 	if err != nil {
-		fmt.Printf("⭕ command Failed: %v, %v, %s\n", name, err, stdout.String())
-		fmt.Println(stderr.String())
+		fmt.Fprintf(logger, "⭕ command Failed: %v, %v, %s\n", name, err, stderr.String())
 		return stdout.String(), fmt.Errorf("%v: %v\n%s", name, err, stderr.String())
 	}
-	fmt.Print(stdout.String())
+	fmt.Fprintln(logger, stdout.String())
 	return stdout.String(), nil
 }
 
 // FileExists checks if a file exists at the given path on system
 func FileExists(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Printf("⭕ system cannot find the file: %s", path)
-		return fmt.Errorf("system cannot find the file: %s", path)
+		return fmt.Errorf("system cannot find the file %s", path)
 	}
 	return nil
 }
 
-// GetFreePort returns an available port number
-func GetFreePort() (int, error) {
-	l, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, fmt.Errorf("failed to find free port: %w", err)
+// checks if a stack folder exists in default base directory
+func StackDirExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("folder does not exist: %s", path)
 	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
+	return nil
 }
 
-// IsPortFree checks if a port is available to use
-func IsPortFree(port uint16) bool {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		return false // Port is in use or blocked
+func CreateDir(path string) error {
+	if strings.TrimSpace(path) == "" {
+		return fmt.Errorf("directory path is empty")
 	}
-	_ = ln.Close()
-	return true
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return fmt.Errorf("failed to directory: %w", err)
+	}
+	return nil
+}
+
+// validate and checks if port is available
+func ValidatePort(port int) error {
+	if port < 1024 || port > 65535 {
+		return fmt.Errorf("port must be between 1024 and 65535")
+	}
+
+	// Check if port is already in use
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return fmt.Errorf("port %d is already in use", port)
+	}
+	defer listener.Close()
+
+	return nil
 }
