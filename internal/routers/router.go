@@ -8,8 +8,8 @@ import (
 	"github.com/satnamSandhu2001/stackjet/internal/services"
 )
 
-func InitRouter(db *sqlx.DB) *gin.Engine {
-	router := gin.Default()
+func InitRouter(router *gin.Engine, db *sqlx.DB) {
+
 	v1 := router.Group("/api/v1")
 
 	userService := services.NewUserService(db)
@@ -35,8 +35,9 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 	stackHandler := handlers.NewStackHandler(stackService)
 	stackGroup := v1.Group("/stack", middlewares.AuthMiddleware(userService))
 	{
+		stackGroup.GET("/list", stackHandler.ListStacks)
 		stackGroup.POST("/new", stackHandler.CreateNewStack)
+		stackGroup.POST("/deploy/:id", stackHandler.DeployStack)
 	}
 
-	return router
 }

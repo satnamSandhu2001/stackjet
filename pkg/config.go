@@ -9,6 +9,7 @@ import (
 )
 
 type AppConfig struct {
+	GO_ENV                  string   `json:"-"`
 	PORT                    uint     `json:"port"`
 	JWT_TOKEN               string   `json:"-"`
 	GIT_BRANCH              string   `json:"git_branch"`
@@ -84,7 +85,11 @@ func Config() *AppConfig {
 			fmt.Println("\nThis will regenerate the authentication token.")
 			os.Exit(1)
 		}
-
+		go_env := os.Getenv("GO_ENV")
+		if go_env == "" {
+			go_env = "development"
+		}
+		loaded.GO_ENV = go_env
 		loaded.JWT_TOKEN = string(tokenData)
 		loaded.VALID_STACKS = []string{"nodejs"}
 		loaded.DB_URL = fmt.Sprintf("file:%s?_fk=1", filepath.Join(stackjetDir, "stackjet.db"))

@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/satnamSandhu2001/stackjet/database"
-	"github.com/satnamSandhu2001/stackjet/internal/cli/stack"
+	"github.com/satnamSandhu2001/stackjet/internal/core/stack"
 	"github.com/satnamSandhu2001/stackjet/internal/dto"
 	"github.com/satnamSandhu2001/stackjet/internal/models"
 	"github.com/satnamSandhu2001/stackjet/internal/services"
@@ -107,12 +107,6 @@ After adding an application, deploy it with:
 				}
 			}
 		}
-		if startCommand == "" {
-			switch stackType {
-			case "nodejs":
-				startCommand = "npm start"
-			}
-		}
 
 		// set default values
 		if branch == "" {
@@ -140,7 +134,7 @@ After adding an application, deploy it with:
 			appCommands.Post = postCommand
 		}
 
-		if err := stack.CreateNewStack(os.Stdout, context.Background(), *stackService, &dto.Stack_CreateRequest{
+		if err := stack.CreateNewStack(os.Stdout, context.Background(), *stackService, &dto.Stack_Create_Request{
 			Type:     stackType,
 			RepoUrl:  repoUrl,
 			Branch:   branch,

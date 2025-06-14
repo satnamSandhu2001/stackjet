@@ -1,13 +1,16 @@
 package commands
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/satnamSandhu2001/stackjet/pkg/logger"
 )
 
 type RunCommandArgs struct {
@@ -24,29 +27,63 @@ func RunCommand(args RunCommandArgs) (string, error) {
 	for k, v := range args.Env {
 		envVarsList = append(envVarsList, fmt.Sprintf("%s=%v", k, v))
 	}
-	fmt.Fprintf(args.Logger, "Executing: %s %s %s\n", strings.Join(envVarsList, " "), args.Name, strings.Join(args.Args, " "))
+	logger.EmitLog(args.Logger, fmt.Sprintf("> Executing: %s %s %s\n", strings.Join(envVarsList, " "), args.Name, strings.Join(args.Args, " ")))
 	// }
 
 	// Create command
 	cmd := exec.Command(args.Name, args.Args...)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
 	cmd.Env = os.Environ()
-
-	// Set environment variables
-	for key, value := range args.Env {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	for k, v := range args.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	// run command
-	err := cmd.Run()
+	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintf(args.Logger, "⭕ command Failed: %v, %v, %s\n", args.Name, err, stderr.String())
-		return stdout.String(), fmt.Errorf("%v: %v\n%s", args.Name, err, stderr.String())
+		return "", fmt.Errorf("could not get stdout pipe: %w", err)
 	}
-	fmt.Fprintln(args.Logger, stdout.String())
-	return stdout.String(), nil
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return "", fmt.Errorf("could not get stderr pipe: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return "", fmt.Errorf("could not start command: %w", err)
+	}
+
+	var output strings.Builder
+
+	done := make(chan error, 2)
+	go func() {
+		done <- streamOutput(stdoutPipe, args.Logger, &output)
+	}()
+	go func() {
+		done <- streamOutput(stderrPipe, args.Logger, &output)
+	}()
+
+	// wait for both stdout and stderr
+	for range 2 {
+		<-done
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return output.String(), fmt.Errorf("command failed: %w", err)
+	}
+	return output.String(), nil
+}
+
+// streams the output of a command to a writer
+func streamOutput(reader io.Reader, w io.Writer, output *strings.Builder) error {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		line := scanner.Text()
+		logger.EmitLog(w, line)
+		output.WriteString(line + "\n")
+
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+	}
+	return scanner.Err()
 }
 
 // FileExists checks if a file exists at the given path on system
