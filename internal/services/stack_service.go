@@ -24,7 +24,7 @@ func NewStackService(db *sqlx.DB) *StackService {
 	}
 }
 
-func (s *StackService) CreateStack(ctx context.Context, data *dto.Stack_CreateRequest) (int64, error) {
+func (s *StackService) CreateStack(ctx context.Context, data *dto.Stack_Create_Request) (int64, error) {
 	directory := helpers.GenerateStackDirPath(data.RepoUrl)
 	uuid := uuid.New().String()
 	if data.Name == "" {
@@ -63,6 +63,21 @@ func (s *StackService) CreateStack(ctx context.Context, data *dto.Stack_CreateRe
 	return newStackID, nil
 }
 
+func (s *StackService) GetStackList(ctx context.Context) ([]models.Stack, error) {
+	var stacks []models.Stack
+
+	query, args, err := sq.Select("*").From("stacks").PlaceholderFormat(sq.Question).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.db.SelectContext(ctx, &stacks, query, args...); err != nil {
+		return nil, err
+	}
+
+	return stacks, nil
+}
+
 func (s *StackService) GetStackByID(ctx context.Context, id int64) (*models.Stack, error) {
 	var stack models.Stack
 
@@ -96,13 +111,13 @@ func (s *StackService) GetStackByDirectory(ctx context.Context, directory string
 	return &stack, nil
 }
 
-func (s *StackService) UpdateStack(ctx context.Context, data *dto.Stack_UpdateRequest) error {
+func (s *StackService) UpdateStack(ctx context.Context, data *dto.Stack_Update_Request) error {
 	// check if stack exists
 	existingStack, err := s.GetStackByID(ctx, data.ID)
 	if err != nil {
 		return err
 	}
-	if existingStack.ID == 0 {
+	if existingStack == nil {
 		return errors.New("stack not found")
 	}
 
@@ -122,6 +137,9 @@ func (s *StackService) UpdateStack(ctx context.Context, data *dto.Stack_UpdateRe
 	if data.CreatedSuccessfully != nil {
 		builder = builder.Set("created_successfully", data.CreatedSuccessfully)
 	}
+	if data.InitialDeploymentSuccess != nil {
+		builder = builder.Set("initial_deployment_success", data.InitialDeploymentSuccess)
+	}
 
 	query, args, err := builder.PlaceholderFormat(sq.Question).ToSql()
 	if err != nil {
@@ -133,7 +151,7 @@ func (s *StackService) UpdateStack(ctx context.Context, data *dto.Stack_UpdateRe
 	return nil
 }
 
-func (s *StackService) CreateDeployment(ctx context.Context, data *dto.Deployment_CreateRequest) (int64, error) {
+func (s *StackService) CreateDeployment(ctx context.Context, data *dto.Deployment_Create_Request) (int64, error) {
 	cols := []string{"stack_id", "status"}
 	values := []any{data.StackID, data.Status}
 
@@ -161,8 +179,8 @@ func (s *StackService) CreateDeployment(ctx context.Context, data *dto.Deploymen
 	return newDeploymentID, nil
 }
 
-func (s *StackService) UpdateDeployment(ctx context.Context, data *dto.Deployment_UpdateRequest) (*models.Deployment, error) {
-	if data.ID == 0 {
+func (s *StackService) UpdateDeployment(ctx context.Context, data *dto.Deployment_Update_Request) (*models.Deployment, error) {
+	if data == nil || data.ID == 0 {
 		return nil, errors.New("deployment id is required")
 	}
 
@@ -192,7 +210,7 @@ func (s *StackService) UpdateDeployment(ctx context.Context, data *dto.Deploymen
 	return deployment, nil
 }
 
-func (s *StackService) CreatePM2(ctx context.Context, data *dto.PM2_CreateRequest) (int64, error) {
+func (s *StackService) CreatePM2(ctx context.Context, data *dto.PM2_Create_Request) (int64, error) {
 	cols := []string{"stack_id", "name", "script"}
 	values := []any{data.StackID, data.Name, data.Script}
 
@@ -235,4 +253,21 @@ func (s *StackService) GetPM2byStackID(ctx context.Context, id int64) (*models.P
 	}
 	return &pm2, nil
 
+}
+
+func (s *StackService) CreateDeploymentLog(ctx context.Context, data *dto.DeploymentLog_Create_Request) (int64, error) {
+	query, args, err := sq.Insert("deployment_logs").Columns("deployment_id", "log").Values(data.DeploymentID, data.Log).PlaceholderFormat(sq.Question).ToSql()
+	if err != nil {
+		return 0, err
+	}
+	result, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	newID, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
 }

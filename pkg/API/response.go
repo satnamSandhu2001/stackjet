@@ -1,10 +1,13 @@
 package API
 
 import (
+	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/satnamSandhu2001/stackjet/pkg"
 )
 
 // Response represents a standard API Response structure for gin
@@ -70,37 +73,70 @@ func Forbidden(c *gin.Context, message string) {
 
 // SendJWTtoken sends a JWT token in a cookie with JSON Response
 func SendJWTtoken(c *gin.Context, token string, message string, data any) {
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", "Bearer "+token, 3400*24*30, "", "", false, true)
+	env := pkg.Config().GO_ENV
+	if env == "production" {
+		c.SetSameSite(http.SameSiteStrictMode)
+	}
+	c.SetCookie(
+		"Authorization",
+		"Bearer "+token,
+		60*60*24*3, // 3 days
+		"/",
+		"",
+		env == "production",
+		true,
+	)
 	Success(c, message, data)
 }
 
-// StreamWriter is a writer that flushes after each Write call
-type StreamWriter struct {
-	writer  http.ResponseWriter
-	flusher http.Flusher
+// server-sent-events writer
+type SSEWriter struct {
+	w      http.ResponseWriter
+	closed bool
 }
 
-func NewStreamWriter(c *gin.Context) *StreamWriter {
-	w := c.Writer
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		return nil
-	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+func NewSSEWriter(w http.ResponseWriter) *SSEWriter {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Transfer-Encoding", "chunked")
-	w.WriteHeader(http.StatusOK)
-
-	return &StreamWriter{
-		writer:  w,
-		flusher: flusher,
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
 	}
+
+	return &SSEWriter{w: w}
 }
-func (s *StreamWriter) Write(p []byte) (n int, err error) {
-	n, err = s.writer.Write(p)
-	s.flusher.Flush()
-	return n, err
+
+func (w *SSEWriter) Write(p []byte) (int, error) {
+	if w.closed {
+		return 0, io.EOF
+	}
+
+	// split into lines, prefix each with "data: "
+	lines := strings.Split(string(p), "\n")
+	var ssePayload strings.Builder
+	for _, line := range lines {
+		ssePayload.WriteString("data: ")
+		ssePayload.WriteString(line)
+		ssePayload.WriteString("\n")
+	}
+	ssePayload.WriteString("\n") // end SSE event
+
+	msg := ssePayload.String()
+
+	_, err := w.w.Write([]byte(msg))
+	if err != nil {
+		return 0, err
+	}
+
+	if flusher, ok := w.w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+
+	// report only number of input bytes accepted (not expanded)
+	return len(p), nil
 }
-func (s *StreamWriter) WriteString(msg string) (int, error) {
-	return s.Write([]byte(msg))
+
+func (s *SSEWriter) Close() {
+	s.closed = true
 }

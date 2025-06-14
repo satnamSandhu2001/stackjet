@@ -19,10 +19,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/satnamSandhu2001/stackjet/database"
-	"github.com/satnamSandhu2001/stackjet/internal/cli/stack"
+	"github.com/satnamSandhu2001/stackjet/internal/core/stack"
 	"github.com/satnamSandhu2001/stackjet/internal/dto"
 	"github.com/satnamSandhu2001/stackjet/internal/services"
 	"github.com/satnamSandhu2001/stackjet/pkg"
@@ -88,16 +90,30 @@ Note: The directory must contain a StackJet-managed application (added via 'stac
 		defer dbConn.Close()
 		stackService := services.NewStackService(dbConn)
 
+		var logBuf strings.Builder
+		multiWriter := io.MultiWriter(os.Stdout, &logBuf)
+
 		// deploy stack logic
-		if err := stack.DeployStack(os.Stdout, context.Background(), *stackService, &dto.Stack_DeployRequest{
+		deploymentID, err := stack.DeployStack(multiWriter, context.Background(), *stackService, &dto.Stack_Deploy_Request{
 			Directory: dir,
 			Remote:    gitRemote,
 			Branch:    gitBranch,
-		}); err != nil {
-			fmt.Printf("⭕ Failed to deploy stack: %s\n", err)
+		})
+		if err != nil {
+			multiWriter.Write([]byte("__ERROR__: " + err.Error()))
+			fmt.Printf("\033[31m⚠️ Deployment failed: %v \033[0m", err)
 			return
 		}
-
+		// Save logs to DB
+		if deploymentID != 0 {
+			_, err := stackService.CreateDeploymentLog(context.Background(), &dto.DeploymentLog_Create_Request{
+				DeploymentID: deploymentID,
+				Log:          logBuf.String(),
+			})
+			if err != nil {
+				fmt.Println("⚠️ Failed to save logs to DB:", err)
+			}
+		}
 	}}
 
 func init() {

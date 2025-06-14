@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"errors"
-	"io"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -42,22 +41,6 @@ func GenerateStackDirPath(repoUrl string) string {
 	basePath := pkg.Config().DEFAULT_STACKS_BASE_DIR
 	finalPath := filepath.Join(basePath, slug+"__"+uid)
 	return finalPath
-}
-
-// MultiLogger is a logger that writes to multiple writers
-type MultiLogger struct {
-	writers []io.Writer
-}
-
-func NewMultiLogger(writers ...io.Writer) *MultiLogger {
-	return &MultiLogger{writers}
-}
-
-func (m *MultiLogger) Write(p []byte) (int, error) {
-	for _, w := range m.writers {
-		w.Write(p) // ignore individual write errors
-	}
-	return len(p), nil
 }
 
 // accepts only: [npm | yarn | pnpm] start or [npm | yarn | pnpm] run <script>

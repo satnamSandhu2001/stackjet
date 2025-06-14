@@ -1,4 +1,4 @@
-# StackJet 🚀
+![StackJet](./web/src/assets/stackjet%20logo%20horizontal.png)
 
 A powerful and easy-to-use CLI + UI tool for multistack automated deployment and management of your web projects.
 
@@ -252,9 +252,14 @@ I welcome contributions! Here's how you can help:
 
 ```bash
 git clone https://github.com/satnamSandhu2001/StackJet.git
-cd stackjet
+cd StackJet
 go mod tidy
-go run main.go -h
+
+# StackJet CLI
+go run main.go --help
+
+# StackJet API Server
+go run http/main.go
 ```
 
 ## 🐛 Issues & Support

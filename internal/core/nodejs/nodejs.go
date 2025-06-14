@@ -7,20 +7,22 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/satnamSandhu2001/stackjet/internal/cli/pm2"
+	"github.com/satnamSandhu2001/stackjet/internal/core/pm2"
 	"github.com/satnamSandhu2001/stackjet/internal/models"
 	"github.com/satnamSandhu2001/stackjet/internal/services"
 	"github.com/satnamSandhu2001/stackjet/pkg/commands"
+	"github.com/satnamSandhu2001/stackjet/pkg/logger"
 )
 
-func DeployStack(logger io.Writer, ctx context.Context, service services.StackService, stack *models.Stack) error {
+func DeployStack(w io.Writer, ctx context.Context, service services.StackService, stack *models.Stack) error {
 	// verify installation
-	if err := verifyInstallation(logger); err != nil {
+	if err := verifyInstallation(w); err != nil {
 		return err
 	}
 
 	// check for package.json file in the root folder of the project
-	fmt.Fprintln(logger, "\n⚓ Checking for package manager file...")
+	logger.EmitLog(w, "")
+	logger.EmitLog(w, "⚓ Checking for package manager file...")
 
 	pkgManager, err := detectPackageManager(stack.Directory)
 	if err != nil {
@@ -30,26 +32,29 @@ func DeployStack(logger io.Writer, ctx context.Context, service services.StackSe
 		return errors.New("no supported package manager (npm, yarn or pnpm) found in project root folder")
 	}
 
-	// install and build commands
+	// execute build command
 	if stack.Commands.Build != "" {
-		fmt.Fprintln(logger, "\n🛠️ Building application...")
-		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "bash", Args: []string{"-c", stack.Commands.Build}}); err != nil {
+		logger.EmitLog(w, "")
+		logger.EmitLog(w, "🛠️ Building application...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "bash", Args: []string{"-c", stack.Commands.Build}}); err != nil {
 			return err
 		}
 	}
 
-	//  start pm2
-	fmt.Fprintf(logger, "\n🚀 Starting %v application...\n", stack.Type)
-	if err := pm2.StartProcess(logger, ctx, service, stack); err != nil {
+	//  handle pm2 + start app
+	logger.EmitLog(w, "")
+	logger.EmitLog(w, fmt.Sprintf("🚀 Starting %v application...\n", stack.Type))
+	if err := pm2.StartProcess(w, ctx, service, stack); err != nil {
 		return err
 	}
 
-	fmt.Fprintln(logger, "\n🚀 Application started successfully")
+	logger.EmitLog(w, "")
+	logger.EmitLog(w, "🚀 Application started successfully")
 	return nil
 }
 
-func verifyInstallation(logger io.Writer) error {
-	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "node", Args: []string{"--version"}}); err != nil {
+func verifyInstallation(w io.Writer) error {
+	if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "node", Args: []string{"--version"}}); err != nil {
 		return fmt.Errorf("nodejs is not installed: %w", err)
 	}
 

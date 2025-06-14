@@ -12,11 +12,12 @@ import (
 	"github.com/satnamSandhu2001/stackjet/internal/models"
 	"github.com/satnamSandhu2001/stackjet/internal/services"
 	"github.com/satnamSandhu2001/stackjet/pkg/commands"
+	"github.com/satnamSandhu2001/stackjet/pkg/logger"
 )
 
-func StartProcess(logger io.Writer, ctx context.Context, service services.StackService, stack *models.Stack) error {
+func StartProcess(w io.Writer, ctx context.Context, service services.StackService, stack *models.Stack) error {
 	// verify installation
-	if err := verifyInstallation(logger); err != nil {
+	if err := verifyInstallation(w); err != nil {
 		return err
 	}
 
@@ -26,9 +27,10 @@ func StartProcess(logger io.Writer, ctx context.Context, service services.StackS
 	}
 
 	if pm2Data == nil { // create new record
-		fmt.Fprintln(logger, "\n🚀 Creating pm2 process...")
+		logger.EmitLog(w, "")
+		logger.EmitLog(w, "🚀 Creating pm2 process...")
 		commandParts := strings.Fields(stack.Commands.Start)
-		if _, err := service.CreatePM2(ctx, &dto.PM2_CreateRequest{
+		if _, err := service.CreatePM2(ctx, &dto.PM2_Create_Request{
 			StackID: stack.ID,
 			Script:  commandParts[0] + " -- " + strings.Join(commandParts[1:], " "),
 			Name:    stack.Name,
@@ -43,20 +45,23 @@ func StartProcess(logger io.Writer, ctx context.Context, service services.StackS
 
 	// start pm2
 	if !stack.InitialDeploymentSuccess {
-		fmt.Fprintln(logger, "\n🚀 Starting pm2 process...")
-		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"start", "--name", pm2Data.Name, pm2Data.Script}}); err != nil {
+		logger.EmitLog(w, "")
+		logger.EmitLog(w, "🚀 Starting pm2 process...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "pm2", Args: []string{"start", "--name", pm2Data.Name, pm2Data.Script}}); err != nil {
 			return err
 		}
 	} else {
-		fmt.Fprintln(logger, "\n🚀 Restarting pm2 process...")
-		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"restart", pm2Data.Name}}); err != nil {
+		logger.EmitLog(w, "")
+		logger.EmitLog(w, "🚀 Restarting pm2 process...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "pm2", Args: []string{"restart", pm2Data.Name}}); err != nil {
 			return err
 		}
 	}
 	// post script
 	if stack.Commands.Post != "" {
-		fmt.Fprintln(logger, "\n🛠️ Running post commands...")
-		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "bash", Args: []string{"-c", stack.Commands.Post}}); err != nil {
+		logger.EmitLog(w, "")
+		logger.EmitLog(w, "🛠️ Running post commands...")
+		if _, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "bash", Args: []string{"-c", stack.Commands.Post}}); err != nil {
 			return err
 		}
 	}
@@ -66,16 +71,16 @@ func StartProcess(logger io.Writer, ctx context.Context, service services.StackS
 	}
 	// save pm2 app list if first deployment
 	if !stack.InitialDeploymentSuccess {
-		commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"save"}})
+		commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "pm2", Args: []string{"save"}})
 	}
 
-	fmt.Fprintln(logger, "🚀 pm2 process started successfully")
+	logger.EmitLog(w, "🚀 pm2 process started successfully")
 	return nil
 }
-func verifyInstallation(logger io.Writer) error {
-	version, err := commands.RunCommand(commands.RunCommandArgs{Logger: logger, Name: "pm2", Args: []string{"--version"}})
+func verifyInstallation(w io.Writer) error {
+	version, err := commands.RunCommand(commands.RunCommandArgs{Logger: w, Name: "pm2", Args: []string{"--version"}})
 	if err != nil || version == "" {
-		fmt.Fprintln(logger, "Please install pm2 (https://github.com/Unitech/pm2?tab=readme-ov-file#installing-pm2)")
+		logger.EmitLog(w, "Please install pm2 (https://github.com/Unitech/pm2?tab=readme-ov-file#installing-pm2)")
 		return fmt.Errorf("pm2 is not installed: %w", err)
 	}
 
